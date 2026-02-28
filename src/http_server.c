@@ -200,12 +200,13 @@ http_server_t* http_server_new(int port)
 	server->port=port;
 	server->running=0;
 	server->base=event_base_new();
-	if(!server)
+	if(!server->base)
 	{
-		fprintf(stderr,"[ERROR]");
+		fprintf(stderr,"[ERROR]创建event_base失败\n");
 		free(server);
 		return NULL;
 	}
+	return server;
 }
 
 int http_server_start(http_server_t* server)
@@ -230,7 +231,29 @@ int http_server_start(http_server_t* server)
 	sin.sin_port=htons(server->port);
 
 	/*创建TCP监听socket并绑定到指定端口，注册到事件循环中*/
-	
+	server->listener = evconnlistener_new_bind(
+		server->base,
+		on_accept,
+		server,
+		LEV_OPT_REUSEABLE|LEV_OPT_CLOSE_ON_FREE,
+		-1,
+		(struct sockaddr*)&sin,
+		sizeof(sin)
+	);
+
+	if(!server->listener)
+	{
+		fprintf(stderr,"[ERROR] 创建监听器失败\n");
+		return -1;
+	}
+
+	server->running = 1;
+	printf("[INFO] HTTP服务器启动成功，监听端口: %d\n", server->port);
+
+	/* 进入事件循环（阻塞） */
+	event_base_dispatch(server->base);
+
+	return 0;
 }
 
 void http_server_stop(http_server_t* server)
@@ -247,7 +270,6 @@ void http_server_stop(http_server_t* server)
 		event_base_loopbreak(server->base);
 	}
 	server->running=0;
-
 }
 
 void http_server_free(http_server_t* server)
@@ -260,7 +282,7 @@ void http_server_free(http_server_t* server)
 	//释放监听器
 	if(server->listener)
 	{
-		evconnlistenerer_free(server->listener);
+		evconnlistener_free(server->listener);
 	}
 
 	//释放event_base示例

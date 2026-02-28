@@ -4,7 +4,7 @@
 #include <event2/bufferevent.h>
 #include "http_parse.h"
 
-typedef void (*route_handler_t)(struct bufferevent* bev,const http_rquest_t* req);
+typedef void (*route_handler_t)(struct bufferevent* bev,const http_request_t* req);
 
 void http_routes_init(void);
 

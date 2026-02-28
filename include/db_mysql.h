@@ -22,15 +22,26 @@ typedef struct
 }time_series_data_t;
 
 
+//插入设备数据
+int db_mysql_insert_device_data(const char* device_id,
+                                double longitude,
+                                double latitude,
+                                double temperature,
+                                double humidity,
+                                double distance);
 
-int db_mysql_init(const char* host,
-	const char* user,
-	const char* password,
-	const char* database);
+/* 固件版本查询 */
+int db_mysql_get_latest_firmware(char* version, int version_len,
+                                 char* download_url,
+                                  int url_len,
+                                 long* file_size, 
+                                 char* md5_hash, 
+                                 int md5_len);
 
-int db_mysql_close();
+/* 设备数据查询 */
+device_data_t* db_mysql_get_all_devices_latest(int* count);
+time_series_data_t* db_mysql_get_device_temperature_history(const char* device_id, int* count);
+time_series_data_t* db_mysql_get_device_humidity_history(const char* device_id, int* count);
 
-//Todo
-//还缺少结构体的定义，数据库的查询和插入操作
 
 #endif
